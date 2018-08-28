@@ -28,7 +28,7 @@ type response_object struct {
 
 func (r *response_object) Json() string {
 	// TODO: to json
-	return ""
+	return "{}"
 }
 
 func CreateResponse(obj map[string]interface{}) (Response, error) {

@@ -21,7 +21,7 @@ type error_object struct {
 
 func (e *error_object) Json() string {
 	// TODO: to json
-	return ""
+	return "{}"
 }
 
 // create a custom error

@@ -31,7 +31,7 @@ type request_object struct {
 
 func (e *request_object) Json() string {
 	// TODO: to json
-	return ""
+	return "{}"
 }
 
 func ParseRequest(obj map[string]interface{}) (Request, error) {
