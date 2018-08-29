@@ -53,3 +53,13 @@ var (
 	// Internal JSON-RPC error.
 	ErrInternalError Err = SimpleError(-32603, "Internal error")
 )
+
+// error with more detail
+var (
+	// ErrParse
+	ErrParse_MissingField_jsonrpc = Error(-32700, "Parse error", "missing field 'jsonrpc'")
+	ErrParse_InvalidField_Method  = Error(-32700, "Parse error", "invalid field 'method'")
+
+	// ErrInvalidRequest
+	ErrParse_Method_ReservedFunc = Error(-32600, "Parse error", "'method' with prefix 'rpc.' is reserved")
+)
