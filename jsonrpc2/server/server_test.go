@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -15,104 +16,124 @@ func TestHandleRequest(t *testing.T) {
 		response string
 	}{
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42, 23], \"id\": 1}",
-			"{\"jsonrpc\": \"2.0\", \"result\": 19, \"id\": 1}",
+			`{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}`,
+			`{"jsonrpc": "2.0", "result": 19, "id": 1}`,
 		},
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [23, 42], \"id\": 2}",
-			"{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}",
+			`{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}`,
+			`{"jsonrpc": "2.0", "result": -19, "id": 2}`,
 		},
 		// {
-		// 	"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"subtrahend\": 23, \"minuend\": 42}, \"id\": 3}",
-		// 	"{\"jsonrpc\": \"2.0\", \"result\": 19, \"id\": 3}",
+		// 	`{"jsonrpc": "2.0", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3}`,
+		// 	`{"jsonrpc": "2.0", "result": 19, "id": 3}`,
 		// },
 		// {
-		// 	"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"minuend\": 42, \"subtrahend\": 23}, \"id\": 4}",
-		// 	"{\"jsonrpc\": \"2.0\", \"result\": 19, \"id\": 4}",
+		// 	`{"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4}`,
+		// 	`{"jsonrpc": "2.0", "result": 19, "id": 4}`,
 		// },
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"update\", \"params\": [1,2,3,4,5]}",
-			"",
+			`{"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}`,
+			``,
 		},
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"foobar\"}",
-			"",
+			`{"jsonrpc": "2.0", "method": "foobar"}`,
+			``,
 		},
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"foobar1\", \"id\": \"1\"}",
-			"{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32601, \"message\": \"Method not found\"}, \"id\": \"1\"}",
+			`{"jsonrpc": "2.0", "method": "foobar1", "id": "1"}`,
+			`{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}`,
 		},
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"foobar, \"params\": \"bar\", \"baz]",
-			"{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32700, \"message\": \"Parse error\"}, \"id\": null}",
+			`{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]`,
+			`{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}`,
 		},
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": 1, \"params\": \"bar\"}",
-			"{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null}",
+			`{"jsonrpc": "2.0", "method": 1, "params": "bar"}`,
+			`{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}`,
 		},
 		{
 			`[
-				{\"jsonrpc\": \"2.0\", \"method\": \"sum\", \"params\": [1,2,4], \"id\": \"1\"},
-				{\"jsonrpc\": \"2.0\", \"method\"
+				{"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+				{"jsonrpc": "2.0", "method"
 			]`,
-			"{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32700, \"message\": \"Parse error\"}, \"id\": null}",
+			`{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}`,
 		},
 		{
-			"[]",
-			"{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null}",
+			`[]`,
+			`{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}`,
 		},
 		{
-			"[1]",
-			"[{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null}]",
+			`[1]`,
+			`[{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}]`,
 		},
 		{
-			"[1,2,3]",
+			`[1,2,3]`,
 			`[
-				{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null},
-				{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null},
-				{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null}
-			]`,
-		},
-		{
-			`[
-				{\"jsonrpc\": \"2.0\", \"method\": \"sum\", \"params\": [1,2,4], \"id\": \"1\"},
-				{\"jsonrpc\": \"2.0\", \"method\": \"notify_hello\", \"params\": [7]},
-				{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42,23], \"id\": \"2\"},
-				{\"foo\": \"boo\"},
-				{\"jsonrpc\": \"2.0\", \"method\": \"foo.get\", \"params\": {\"name\": \"myself\"}, \"id\": \"5\"},
-				{\"jsonrpc\": \"2.0\", \"method\": \"get_data\", \"id\": \"9\"} 
-			]`,
-			`[
-				{\"jsonrpc\": \"2.0\", \"result\": 7, \"id\": \"1\"},
-				{\"jsonrpc\": \"2.0\", \"result\": 19, \"id\": \"2\"},
-				{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32600, \"message\": \"Invalid Request\"}, \"id\": null},
-				{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32601, \"message\": \"Method not found\"}, \"id\": \"5\"},
-				{\"jsonrpc\": \"2.0\", \"result\": [\"hello\", 5], \"id\": \"9\"}
+				{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+				{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+				{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
 			]`,
 		},
 		{
 			`[
-				{\"jsonrpc\": \"2.0\", \"method\": \"notify_sum\", \"params\": [1,2,4]},
-				{\"jsonrpc\": \"2.0\", \"method\": \"notify_hello\", \"params\": [7]}
+				{"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+				{"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
+				{"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
+				{"foo": "boo"},
+				{"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
+				{"jsonrpc": "2.0", "method": "get_data", "id": "9"} 
 			]`,
-			"",
+			`[
+				{"jsonrpc": "2.0", "result": 7, "id": "1"},
+				{"jsonrpc": "2.0", "result": 19, "id": "2"},
+				{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+				{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
+				{"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
+			]`,
+		},
+		{
+			`[
+				{"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
+				{"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
+			]`,
+			``,
 		},
 	}
 
 	server.HandleFunc("subtract", func(a, b float64) float64 {
+		t.Log("subtract", a, b)
 		return a - b
 	})
 
 	server.HandleFunc("update", func(a, b, c, d, e float64) {
-
+		t.Log("update", a, b, c, d, e)
 	})
 
 	server.HandleFunc("foobar", func() {
+		t.Log("foobar")
+	})
 
+	server.HandleFunc("sum", func(a, b, c float64) float64 {
+		t.Log("sum", a, b, c)
+		return a + b + c
+	})
+
+	server.HandleFunc("notify_hello", func(v float64) {
+		t.Log("notify_hello", v)
+	})
+
+	server.HandleFunc("get_data", func() interface{} {
+		t.Log("get_data")
+		return []interface{}{"hello", 5}
+	})
+
+	server.HandleFunc("notify_sum", func(a, b, c float64) {
+		t.Log("notify_sum", a, b, c)
 	})
 
 	for i, value := range values {
 		resp := server.HandleRequest([]byte(value.request))
+		// t.Logf("request (%d): %s", i, value.request)
 		if len(resp) == 0 && value.response == "" {
 			continue
 		} else if len(resp) == 0 && value.response != "" || len(resp) != 0 && value.response == "" {
@@ -130,6 +151,8 @@ func TestHandleRequest(t *testing.T) {
 				b = make(map[string]interface{})
 			}
 			if ea, eb := json.Unmarshal(resp, &a), json.Unmarshal([]byte(value.response), &b); ea != nil || eb != nil {
+				t.Error(ea)
+				t.Error(eb)
 				t.Errorf("response not match (#%d) (parse): Got: %s, Expect: %s", i, string(resp), value.response)
 			} else {
 				ignore_data(a)
@@ -159,8 +182,10 @@ func ignore_data(obj interface{}) {
 func obj_cmpr(a, b interface{}) bool {
 	ra, rb := reflect.ValueOf(a), reflect.ValueOf(b)
 	if ra.IsValid() != rb.IsValid() {
+		fmt.Println("diff1")
 		return false
 	} else if ra.Kind() != rb.Kind() {
+		fmt.Println("diff2")
 		return false
 	}
 
@@ -177,6 +202,7 @@ func obj_cmpr(a, b interface{}) bool {
 		return ra.String() == rb.String()
 	case reflect.Array, reflect.Slice:
 		if ra.Len() != rb.Len() {
+			fmt.Println("diff3")
 			return false
 		} else {
 			for i := 0; i < ra.Len(); i++ {
@@ -188,12 +214,14 @@ func obj_cmpr(a, b interface{}) bool {
 	case reflect.Map:
 		keys := ra.MapKeys()
 		if len(keys) != len(rb.MapKeys()) {
+			fmt.Println("diff4")
 			return false
 		}
 
 		for _, k := range keys {
 			fa, fb := ra.MapIndex(k), rb.MapIndex(k)
 			if fa.IsValid() != fb.IsValid() {
+				fmt.Println("diff5")
 				return false
 			} else if !obj_cmpr(fa.Interface(), fb.Interface()) {
 				return false
