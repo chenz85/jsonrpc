@@ -102,12 +102,14 @@ func (e *request_object) ArrayParams() []interface{} {
 }
 
 func (e *request_object) Parse(obj map[string]interface{}) (err Err) {
+	// jsonrpc
 	if json_rpc, ex := obj["jsonrpc"]; !ex || json_rpc != "2.0" {
 		return ErrParse_MissingField_jsonrpc
 	} else {
 		e.jsonrpc, _ = json_rpc.(string)
 	}
 
+	// method
 	if method_val, ex := obj["method"]; !ex {
 		return ErrParse_InvalidField_Method
 	} else if method, ok := method_val.(string); !ok || method == "" {
@@ -118,13 +120,23 @@ func (e *request_object) Parse(obj map[string]interface{}) (err Err) {
 		e.method = method
 	}
 
+	// id
 	if id_val, ex := obj["id"]; !ex {
 		// notification
 	} else {
 		e.id = id_val
 	}
 
-	// TODO: params
+	// params
+	if params_val, ex := obj["params"]; !ex {
+		e.param_type = RequestParamTypeNone
+	} else if params_map, ok := params_val.(map[string]interface{}); ok {
+		e.param_type = RequestParamTypeMap
+		e.params, e.params_map = params_map, params_map
+	} else if params_arr, ok := params_val.([]interface{}); ok {
+		e.param_type = RequestParamTypeArray
+		e.params, e.params_arr = params_arr, params_arr
+	}
 
 	return
 }
