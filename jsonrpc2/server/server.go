@@ -11,7 +11,7 @@ import (
 // process request data, and return response object.
 // respnose object is nil if err is not nil.
 func HandleRequest(data []byte) (resp_data []byte) {
-	log.Println("req data: %s", string(data))
+	log.Printf("req data: %s\n", string(data))
 	var err object.Err
 	var resp_arr = make([]object.Response, 0, 1)
 	if data[0] == '[' {
@@ -66,6 +66,7 @@ func HandleRequest(data []byte) (resp_data []byte) {
 
 func process_request(req object.Request) (resp object.Response, err object.Err) {
 	// TODO: process request
+	log.Printf("req: %+v\n", req)
 	return
 }
 
