@@ -39,7 +39,7 @@ func TestHandleRequest(t *testing.T) {
 			"",
 		},
 		{
-			"{\"jsonrpc\": \"2.0\", \"method\": \"foobar\", \"id\": \"1\"}",
+			"{\"jsonrpc\": \"2.0\", \"method\": \"foobar1\", \"id\": \"1\"}",
 			"{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32601, \"message\": \"Method not found\"}, \"id\": \"1\"}",
 		},
 		{
@@ -107,6 +107,10 @@ func TestHandleRequest(t *testing.T) {
 
 	})
 
+	server.HandleFunc("foobar", func() {
+
+	})
+
 	for i, value := range values {
 		resp := server.HandleRequest([]byte(value.request))
 		if len(resp) == 0 && value.response == "" {
@@ -127,11 +131,28 @@ func TestHandleRequest(t *testing.T) {
 			}
 			if ea, eb := json.Unmarshal(resp, &a), json.Unmarshal([]byte(value.response), &b); ea != nil || eb != nil {
 				t.Errorf("response not match (#%d) (parse): Got: %s, Expect: %s", i, string(resp), value.response)
-			} else if !obj_cmpr(a, b) {
-				t.Errorf("response not match (#%d) (cmpr): Got: %s, Expect: %s", i, string(resp), value.response)
+			} else {
+				ignore_data(a)
+				if !obj_cmpr(a, b) {
+					t.Errorf("response not match (#%d) (cmpr): Got: %s, Expect: %s", i, string(resp), value.response)
+				}
 			}
 		}
 
+	}
+}
+
+func ignore_data(obj interface{}) {
+	switch obj := obj.(type) {
+	case []interface{}:
+		for _, o := range obj {
+			ignore_data(o)
+		}
+	case map[string]interface{}:
+		if fe_val, ex := obj["error"]; !ex {
+		} else if fe, ok := fe_val.(map[string]interface{}); ok {
+			delete(fe, "data")
+		}
 	}
 }
 

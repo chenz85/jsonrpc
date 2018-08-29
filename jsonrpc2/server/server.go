@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 
@@ -46,12 +47,20 @@ func HandleRequest(data []byte) (resp_data []byte) {
 	}
 
 	if err != nil {
-		resp_data = err.JsonObject().ToJson()
+		// error response
+		if _resp, re := object.NewResponse(nil, err, nil); re != nil {
+			err = object.ErrInternalError
+		} else {
+			resp_data = _resp.JsonObject().ToJson()
+		}
 	} else if resp_cnt := len(resp_arr); resp_cnt == 0 {
+		// no response
 		resp_data = nil
 	} else if resp_cnt == 1 {
+		// single response
 		resp_data = resp_arr[0].JsonObject().ToJson()
 	} else {
+		// batch response
 		var obj_arr = make([]object.JsonObject, resp_cnt)
 		for i, resp := range resp_arr {
 			obj_arr[i] = resp.JsonObject()
@@ -80,7 +89,7 @@ func process_request(req object.Request) (resp object.Response) {
 	}
 	if _resp, re := object.NewResponse(result, err, req.Id()); re != nil {
 		err = object.ErrInternalError
-	} else if !req.IsNotification() {
+	} else if err != nil || !req.IsNotification() {
 		resp = _resp
 	}
 	return

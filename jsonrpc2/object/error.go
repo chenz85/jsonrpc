@@ -65,10 +65,10 @@ var (
 var (
 	// ErrParse
 	ErrParse_MissingField_jsonrpc = Error(-32700, "Parse error", "missing field 'jsonrpc'")
-	ErrParse_InvalidField_Method  = Error(-32700, "Parse error", "invalid field 'method'")
 
 	// ErrInvalidRequest
-	ErrParse_Method_ReservedFunc = Error(-32600, "Parse error", "'method' with prefix 'rpc.' is reserved")
+	ErrParse_InvalidField_Method = Error(-32600, "Invalid Request", "invalid field 'method'")
+	ErrParse_Method_ReservedFunc = Error(-32600, "Invalid Request", "'method' with prefix 'rpc.' is reserved")
 
 	// ErrInvalidParams
 	ErrMethod_ParamsNumNotMatch = Error(-32602, "Invalid params", "num of params is not match")
