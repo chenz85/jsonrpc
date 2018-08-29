@@ -100,34 +100,34 @@ func TestHandleRequest(t *testing.T) {
 		},
 	}
 
-	server.HandleFunc("subtract", func(a, b float64) float64 {
+	server.RegisterMethod("subtract", func(a, b float64) float64 {
 		t.Log("subtract", a, b)
 		return a - b
 	})
 
-	server.HandleFunc("update", func(a, b, c, d, e float64) {
+	server.RegisterMethod("update", func(a, b, c, d, e float64) {
 		t.Log("update", a, b, c, d, e)
 	})
 
-	server.HandleFunc("foobar", func() {
+	server.RegisterMethod("foobar", func() {
 		t.Log("foobar")
 	})
 
-	server.HandleFunc("sum", func(a, b, c float64) float64 {
+	server.RegisterMethod("sum", func(a, b, c float64) float64 {
 		t.Log("sum", a, b, c)
 		return a + b + c
 	})
 
-	server.HandleFunc("notify_hello", func(v float64) {
+	server.RegisterMethod("notify_hello", func(v float64) {
 		t.Log("notify_hello", v)
 	})
 
-	server.HandleFunc("get_data", func() interface{} {
+	server.RegisterMethod("get_data", func() interface{} {
 		t.Log("get_data")
 		return []interface{}{"hello", 5}
 	})
 
-	server.HandleFunc("notify_sum", func(a, b, c float64) {
+	server.RegisterMethod("notify_sum", func(a, b, c float64) {
 		t.Log("notify_sum", a, b, c)
 	})
 

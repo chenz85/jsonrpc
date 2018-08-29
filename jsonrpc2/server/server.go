@@ -99,7 +99,7 @@ func process_request(req object.Request) (resp object.Response) {
 
 // register func to rpc server
 // f MUST be a func
-func HandleFunc(name string, f interface{}) (err error) {
+func RegisterMethod(name string, f interface{}) (err error) {
 	rf := reflect.ValueOf(f)
 	if !rf.IsValid() || rf.IsNil() || rf.Kind() != reflect.Func {
 		err = Error_Server_InvalidRPCMethod
