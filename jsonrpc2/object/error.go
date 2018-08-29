@@ -39,6 +39,7 @@ func Error(code int, message string, data interface{}) Err {
 	return &error_object{
 		code:    code,
 		message: message,
+		data:    data,
 	}
 }
 
