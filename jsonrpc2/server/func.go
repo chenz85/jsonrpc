@@ -6,8 +6,14 @@ import (
 	"github.com/czsilence/jsonrpc/jsonrpc2/object"
 )
 
+// rpc method interface
+type RPCMethod interface {
+	Invoke() (result interface{}, err object.Err)
+	InvokeA(params []interface{}) (result interface{}, err object.Err)
+}
+
 // rpc method data
-type RPCMethod struct {
+type _RPCMethod struct {
 	// register name
 	n string
 	// func object
@@ -18,7 +24,7 @@ type RPCMethod struct {
 	rfpt []reflect.Type
 }
 
-func (m *RPCMethod) Invoke() (result interface{}, err object.Err) {
+func (m *_RPCMethod) Invoke() (result interface{}, err object.Err) {
 	if m.rft.NumIn() != 0 {
 		err = object.ErrMethod_ParamsNumNotMatch
 	} else {
@@ -27,7 +33,7 @@ func (m *RPCMethod) Invoke() (result interface{}, err object.Err) {
 	}
 	return
 }
-func (m *RPCMethod) InvokeA(params []interface{}) (result interface{}, err object.Err) {
+func (m *_RPCMethod) InvokeA(params []interface{}) (result interface{}, err object.Err) {
 	if m.rft.NumIn() != len(params) {
 		err = object.ErrMethod_ParamsNumNotMatch
 	} else {
@@ -45,7 +51,7 @@ func (m *RPCMethod) InvokeA(params []interface{}) (result interface{}, err objec
 	return
 }
 
-func (m *RPCMethod) return_values(vals []reflect.Value) (result interface{}) {
+func (m *_RPCMethod) return_values(vals []reflect.Value) (result interface{}) {
 	if result_num := m.rf.Type().NumOut(); result_num == 0 {
 		result = nil
 	} else if result_num == 1 {
@@ -62,7 +68,7 @@ func (m *RPCMethod) return_values(vals []reflect.Value) (result interface{}) {
 
 ////////////////////////////////////////////////
 type RPCMethodMapper struct {
-	method_map map[string]*RPCMethod
+	method_map map[string]RPCMethod
 }
 
 // register method to rpc server.
@@ -70,7 +76,7 @@ type RPCMethodMapper struct {
 // params of method with number type (int/int32/...) MUST use float64
 func (mapper *RPCMethodMapper) RegisterMethod(name string, method interface{}) (err error) {
 	if mapper.method_map == nil {
-		mapper.method_map = make(map[string]*RPCMethod)
+		mapper.method_map = make(map[string]RPCMethod)
 	}
 
 	rf := reflect.ValueOf(method)
@@ -86,7 +92,7 @@ func (mapper *RPCMethodMapper) map_rpc_method(name string, reflect_func reflect.
 	if _, ex := mapper.method_map[name]; ex {
 		err = Error_Server_DuplicatedRPCMethod
 	} else {
-		var method = &RPCMethod{
+		var method = &_RPCMethod{
 			n:   name,
 			rf:  reflect_func,
 			rft: reflect_func.Type(),
@@ -102,7 +108,7 @@ func (mapper *RPCMethodMapper) map_rpc_method(name string, reflect_func reflect.
 	return
 }
 
-func (mapper *RPCMethodMapper) Get(name string) (method *RPCMethod, exist bool) {
+func (mapper *RPCMethodMapper) Get(name string) (method RPCMethod, exist bool) {
 	method, exist = mapper.method_map[name]
 	return
 }

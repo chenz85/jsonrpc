@@ -13,8 +13,9 @@ func main() {
 }
 
 func start() {
-	server.RegisterMethod("echo", func(val string) string {
+	svr := server.NewHttpServer("", 9002, "rpc")
+	svr.RegisterMethod("echo", func(val string) string {
 		return fmt.Sprintf("you say: %s", val)
 	})
-	server.StartHttpServer("", 9002, "rpc")
+	svr.Serve()
 }

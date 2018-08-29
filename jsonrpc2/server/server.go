@@ -7,9 +7,13 @@ import (
 	"github.com/czsilence/jsonrpc/jsonrpc2/object"
 )
 
+type BaseServer struct {
+	method_mapper RPCMethodMapper
+}
+
 // process request data, and return response object.
 // respnose object is nil if err is not nil.
-func HandleRequest(data []byte) (resp_data []byte) {
+func (bs *BaseServer) HandleRequest(data []byte) (resp_data []byte) {
 	log.Printf("req data: %s\n", string(data))
 	if data[0] == '[' {
 		// batch request
@@ -18,17 +22,17 @@ func HandleRequest(data []byte) (resp_data []byte) {
 		var objs = make([]interface{}, 0, 1)
 		if je := json.Unmarshal(data, &objs); je != nil {
 			log.Println("parse request failed:", je)
-			resp_arr = append(resp_arr, process_error(object.ErrParse))
+			resp_arr = append(resp_arr, bs.process_error(object.ErrParse))
 			single_error = true
 		} else if len(objs) == 0 {
-			resp_arr = append(resp_arr, process_error(object.ErrInvalidRequest))
+			resp_arr = append(resp_arr, bs.process_error(object.ErrInvalidRequest))
 			single_error = true
 		} else {
 			for _, obj_val := range objs {
 				obj, _ := obj_val.(map[string]interface{})
 				if req, pe := object.ParseRequest(obj); pe != nil {
-					resp_arr = append(resp_arr, process_error(pe))
-				} else if resp := process_request(req); resp != nil {
+					resp_arr = append(resp_arr, bs.process_error(pe))
+				} else if resp := bs.process_request(req); resp != nil {
 					resp_arr = append(resp_arr, resp)
 				}
 			}
@@ -52,11 +56,11 @@ func HandleRequest(data []byte) (resp_data []byte) {
 		var obj = make(map[string]interface{})
 		if je := json.Unmarshal(data, &obj); je != nil {
 			log.Println("parse request failed:", je)
-			resp = process_error(object.ErrParse)
+			resp = bs.process_error(object.ErrParse)
 		} else if req, pe := object.ParseRequest(obj); pe != nil {
-			resp = process_error(pe)
+			resp = bs.process_error(pe)
 		} else {
-			resp = process_request(req)
+			resp = bs.process_request(req)
 		}
 
 		if resp != nil {
@@ -66,18 +70,18 @@ func HandleRequest(data []byte) (resp_data []byte) {
 	return
 }
 
-func process_error(err object.Err) (resp object.Response) {
+func (bs *BaseServer) process_error(err object.Err) (resp object.Response) {
 	resp, _ = object.NewResponse(nil, err, nil)
 	return
 }
 
-func process_request(req object.Request) (resp object.Response) {
+func (bs *BaseServer) process_request(req object.Request) (resp object.Response) {
 	var result interface{}
 	var err object.Err
 	log.Printf("req: %+v\n", req)
 	if req == nil {
 		err = object.ErrInvalidRequest
-	} else if method, ex := get_method(req.Method()); !ex {
+	} else if method, ex := bs.method_mapper.Get(req.Method()); !ex {
 		err = object.ErrMethodNotFound
 	} else {
 		switch req.ParamType() {
@@ -94,4 +98,8 @@ func process_request(req object.Request) (resp object.Response) {
 		resp = _resp
 	}
 	return
+}
+
+func (bs *BaseServer) RegisterMethod(name string, method interface{}) (err error) {
+	return bs.method_mapper.RegisterMethod(name, method)
 }
