@@ -129,10 +129,52 @@ func (e *request_object) Parse(obj map[string]interface{}) (err Err) {
 	return
 }
 
+func (e *request_object) Check() error {
+	// TODO: data check
+
+	if e.params == nil {
+		e.param_type = RequestParamTypeNone
+	}
+
+	return nil
+}
+
 ////////////////////////////////////////////////////////////////
 func ParseRequest(obj map[string]interface{}) (Request, Err) {
 	var req = &request_object{}
 	if err := req.Parse(obj); err != nil {
+		return nil, err
+	} else {
+		return req, nil
+	}
+}
+
+// make a new request
+func NewRequestA(method string, params []interface{}, id interface{}) (Request, error) {
+	var req = &request_object{
+		jsonrpc:    "2.0",
+		method:     method,
+		params:     params,
+		param_type: RequestParamTypeArray,
+		id:         id,
+	}
+
+	if err := req.Check(); err != nil {
+		return nil, err
+	} else {
+		return req, nil
+	}
+}
+
+// make a new request
+func NewRequestM(method string, params map[string]interface{}, id interface{}) (Request, error) {
+	var req = &request_object{
+		jsonrpc:    "2.0",
+		method:     method,
+		param_type: RequestParamTypeMap,
+		id:         id,
+	}
+	if err := req.Check(); err != nil {
 		return nil, err
 	} else {
 		return req, nil
