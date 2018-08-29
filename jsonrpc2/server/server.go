@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"log"
-	"reflect"
 
 	"github.com/czsilence/jsonrpc/jsonrpc2/object"
 )
@@ -93,18 +92,6 @@ func process_request(req object.Request) (resp object.Response) {
 		err = object.ErrInternalError
 	} else if err != nil || !req.IsNotification() {
 		resp = _resp
-	}
-	return
-}
-
-// register func to rpc server
-// f MUST be a func
-func RegisterMethod(name string, f interface{}) (err error) {
-	rf := reflect.ValueOf(f)
-	if !rf.IsValid() || rf.IsNil() || rf.Kind() != reflect.Func {
-		err = Error_Server_InvalidRPCMethod
-	} else {
-		map_rpc_method(name, rf)
 	}
 	return
 }
