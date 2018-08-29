@@ -6,13 +6,27 @@ https://www.jsonrpc.org/specification
 
 # Server
 
-* start server
+* start http server
 
     ```go
     import 	"github.com/czsilence/jsonrpc/jsonrpc2/server"
 
-    // http server
 	svr := server.NewHttpServer("127.0.0.1", 9002, "rpc")
+	svr.RegisterMethod("echo", func(val string) string {
+		return fmt.Sprintf("you say: %s", val)
+	})
+	svr.Serve()
+    ```
+
+* start socket server
+
+    ```go
+    import 	"github.com/czsilence/jsonrpc/jsonrpc2/server"
+
+    // listen on a tcp host
+    svr := server.NewSocketServer("tcp4", ":9003")
+    // or linsten on a unix socket. The path to rpc.socket must be exist
+	// svr := server.NewSocketServer("unix", "path/to/rpc.socket")
 	svr.RegisterMethod("echo", func(val string) string {
 		return fmt.Sprintf("you say: %s", val)
 	})
