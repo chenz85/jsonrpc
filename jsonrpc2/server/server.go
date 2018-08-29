@@ -101,5 +101,13 @@ func (bs *BaseServer) process_request(req object.Request) (resp object.Response)
 }
 
 func (bs *BaseServer) RegisterMethod(name string, method interface{}) (err error) {
+	if bs.method_mapper == nil {
+		bs.method_mapper = NewRPCMethodMapper()
+	}
+
 	return bs.method_mapper.RegisterMethod(name, method)
+}
+
+func (bs *BaseServer) RegisterMapper(mapper RPCMethodMapper) {
+	bs.method_mapper = mapper
 }

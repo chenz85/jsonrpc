@@ -67,14 +67,19 @@ func (m *_RPCMethod) return_values(vals []reflect.Value) (result interface{}) {
 }
 
 ////////////////////////////////////////////////
-type RPCMethodMapper struct {
+type RPCMethodMapper interface {
+	RegisterMethod(name string, method interface{}) (err error)
+	Get(name string) (method RPCMethod, exist bool)
+}
+
+type _RPCMethodMapper struct {
 	method_map map[string]RPCMethod
 }
 
 // register method to rpc server.
 // method MUST be a func. (except variadic function)
 // params of method with number type (int/int32/...) MUST use float64
-func (mapper *RPCMethodMapper) RegisterMethod(name string, method interface{}) (err error) {
+func (mapper *_RPCMethodMapper) RegisterMethod(name string, method interface{}) (err error) {
 	if mapper.method_map == nil {
 		mapper.method_map = make(map[string]RPCMethod)
 	}
@@ -88,7 +93,7 @@ func (mapper *RPCMethodMapper) RegisterMethod(name string, method interface{}) (
 	return
 }
 
-func (mapper *RPCMethodMapper) map_rpc_method(name string, reflect_func reflect.Value) (err error) {
+func (mapper *_RPCMethodMapper) map_rpc_method(name string, reflect_func reflect.Value) (err error) {
 	if _, ex := mapper.method_map[name]; ex {
 		err = Error_Server_DuplicatedRPCMethod
 	} else {
@@ -108,7 +113,11 @@ func (mapper *RPCMethodMapper) map_rpc_method(name string, reflect_func reflect.
 	return
 }
 
-func (mapper *RPCMethodMapper) Get(name string) (method RPCMethod, exist bool) {
+func (mapper *_RPCMethodMapper) Get(name string) (method RPCMethod, exist bool) {
 	method, exist = mapper.method_map[name]
 	return
+}
+
+func NewRPCMethodMapper() RPCMethodMapper {
+	return &_RPCMethodMapper{}
 }
