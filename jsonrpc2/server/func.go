@@ -12,10 +12,14 @@ type RPCMethod struct {
 	n string
 	// func object
 	rf reflect.Value
+	// type of func object
+	rft reflect.Type
+	// param type list
+	rfpt []reflect.Type
 }
 
 func (m *RPCMethod) Invoke() (result interface{}, err object.Err) {
-	if m.rf.Type().NumIn() != 0 {
+	if m.rft.NumIn() != 0 {
 		err = object.ErrMethod_ParamsNumNotMatch
 	} else {
 		var result_vals = m.rf.Call(nil)
@@ -24,11 +28,15 @@ func (m *RPCMethod) Invoke() (result interface{}, err object.Err) {
 	return
 }
 func (m *RPCMethod) InvokeA(params []interface{}) (result interface{}, err object.Err) {
-	if m.rf.Type().NumIn() != len(params) {
+	if m.rft.NumIn() != len(params) {
 		err = object.ErrMethod_ParamsNumNotMatch
 	} else {
 		var param_vals = make([]reflect.Value, len(params))
 		for i, p := range params {
+			if reflect.TypeOf(p) != m.rfpt[i] {
+				err = object.ErrMethod_WrongParamsType
+				return
+			}
 			param_vals[i] = reflect.ValueOf(p)
 		}
 		var result_vals = m.rf.Call(param_vals)
@@ -60,10 +68,18 @@ func map_rpc_method(name string, reflect_func reflect.Value) (err error) {
 	if _, ex := rpc_mapper[name]; ex {
 		err = Error_Server_DuplicatedRPCMethod
 	} else {
-		rpc_mapper[name] = &RPCMethod{
-			n:  name,
-			rf: reflect_func,
+		var method = &RPCMethod{
+			n:   name,
+			rf:  reflect_func,
+			rft: reflect_func.Type(),
 		}
+
+		method.rfpt = make([]reflect.Type, method.rft.NumIn())
+		for i := 0; i < method.rft.NumIn(); i++ {
+			method.rfpt[i] = method.rft.In(i)
+		}
+
+		rpc_mapper[name] = method
 	}
 	return
 }

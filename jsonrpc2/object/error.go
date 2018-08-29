@@ -72,4 +72,5 @@ var (
 
 	// ErrInvalidParams
 	ErrMethod_ParamsNumNotMatch = Error(-32602, "Invalid params", "num of params is not match")
+	ErrMethod_WrongParamsType   = Error(-32602, "Invalid params", "wrong param type")
 )
