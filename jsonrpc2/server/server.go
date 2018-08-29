@@ -27,10 +27,8 @@ func HandleRequest(data []byte) (resp_data []byte) {
 				if req, pe := object.ParseRequest(obj); pe != nil {
 					err = pe
 					break
-				} else if resp, pe := process_request(req); pe != nil {
-					err = pe
-					break
 				} else {
+					resp := process_request(req)
 					resp_arr = append(resp_arr, resp)
 				}
 			}
@@ -43,9 +41,8 @@ func HandleRequest(data []byte) (resp_data []byte) {
 			err = object.ErrParse
 		} else if req, pe := object.ParseRequest(obj); pe != nil {
 			err = pe
-		} else if resp, pe := process_request(req); pe != nil {
-			err = pe
 		} else {
+			resp := process_request(req)
 			resp_arr = append(resp_arr, resp)
 		}
 	}
@@ -64,9 +61,28 @@ func HandleRequest(data []byte) (resp_data []byte) {
 	return
 }
 
-func process_request(req object.Request) (resp object.Response, err object.Err) {
-	// TODO: process request
+func process_request(req object.Request) (resp object.Response) {
+	var result interface{}
+	var err object.Err
 	log.Printf("req: %+v\n", req)
+	if req == nil {
+		err = object.ErrInvalidRequest
+	} else if method, ex := get_method(req.Method()); !ex {
+		err = object.ErrMethodNotFound
+	} else {
+		switch req.ParamType() {
+		case object.RequestParamTypeNone:
+			result, err = method.Invoke()
+		case object.RequestParamTypeArray:
+			result, err = method.InvokeA(req.ArrayParams())
+		}
+
+	}
+	if _resp, re := object.NewResponse(result, err, req.Id()); re != nil {
+		err = object.ErrInternalError
+	} else {
+		resp = _resp
+	}
 	return
 }
 
@@ -75,9 +91,9 @@ func process_request(req object.Request) (resp object.Response, err object.Err) 
 func HandleFunc(name string, f interface{}) (err error) {
 	rf := reflect.ValueOf(f)
 	if !rf.IsValid() || rf.IsNil() || rf.Kind() != reflect.Func {
-		err = Error_Server_InvalidRPCFunc
+		err = Error_Server_InvalidRPCMethod
 	} else {
-		map_rpc_func(name, rf)
+		map_rpc_method(name, rf)
 	}
 	return
 }

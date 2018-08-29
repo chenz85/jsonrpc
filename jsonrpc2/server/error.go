@@ -3,6 +3,6 @@ package server
 import "errors"
 
 var (
-	Error_Server_InvalidRPCFunc    = errors.New("invalid rpc func")
-	Error_Server_DuplicatedRPCFunc = errors.New("duplicated rpc func")
+	Error_Server_InvalidRPCMethod    = errors.New("invalid rpc method")
+	Error_Server_DuplicatedRPCMethod = errors.New("duplicated rpc method")
 )

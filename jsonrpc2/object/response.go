@@ -18,7 +18,7 @@ type response_object struct {
 	// This member is REQUIRED on error.
 	// This member MUST NOT exist if there was no error triggered during invocation.
 	// The value for this member MUST be an Object as defined in section 5.1.
-	err string
+	err Err
 
 	// This member is REQUIRED.
 	// It MUST be the same as the value of the id member in the Request Object.
@@ -31,8 +31,8 @@ func (resp *response_object) JsonObject() JsonObject {
 		"jsonrpc": resp.jsonrpc,
 		"id":      resp.id,
 	}
-	if resp.err != "" {
-		obj["error"] = resp.err
+	if resp.err != nil {
+		obj["error"] = resp.err.JsonObject()
 	} else {
 		obj["result"] = resp.result
 	}
@@ -42,5 +42,15 @@ func (resp *response_object) JsonObject() JsonObject {
 func CreateResponse(obj map[string]interface{}) (Response, error) {
 	var resp = &response_object{}
 	// TODO: fill request object
+	return resp, nil
+}
+
+func NewResponse(result interface{}, err Err, id interface{}) (Response, error) {
+	var resp = &response_object{
+		jsonrpc: "2.0",
+		result:  result,
+		err:     err,
+		id:      id,
+	}
 	return resp, nil
 }

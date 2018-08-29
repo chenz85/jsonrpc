@@ -15,7 +15,6 @@ const (
 	RequestParamTypeInvalid RequestParamType = iota
 	RequestParamTypeNone
 	RequestParamTypeArray
-	RequestParamTypeMap
 )
 
 func (t RequestParamType) String() string {
@@ -24,8 +23,6 @@ func (t RequestParamType) String() string {
 		return "none"
 	case RequestParamTypeArray:
 		return "array"
-	case RequestParamTypeMap:
-		return "map"
 	default:
 		return "invalid"
 	}
@@ -40,7 +37,6 @@ type Request interface {
 	Method() string
 	ParamType() RequestParamType
 
-	MapParams() map[string]interface{}
 	ArrayParams() []interface{}
 }
 
@@ -58,8 +54,6 @@ type request_object struct {
 	params interface{}
 	// type of params
 	param_type RequestParamType
-	// map params, ref of params
-	params_map map[string]interface{}
 	// array params, ref of params
 	params_arr []interface{}
 
@@ -91,10 +85,6 @@ func (e *request_object) Method() string {
 
 func (e *request_object) ParamType() RequestParamType {
 	return e.param_type
-}
-
-func (e *request_object) MapParams() map[string]interface{} {
-	return e.params_map
 }
 
 func (e *request_object) ArrayParams() []interface{} {
@@ -130,9 +120,6 @@ func (e *request_object) Parse(obj map[string]interface{}) (err Err) {
 	// params
 	if params_val, ex := obj["params"]; !ex {
 		e.param_type = RequestParamTypeNone
-	} else if params_map, ok := params_val.(map[string]interface{}); ok {
-		e.param_type = RequestParamTypeMap
-		e.params, e.params_map = params_map, params_map
 	} else if params_arr, ok := params_val.([]interface{}); ok {
 		e.param_type = RequestParamTypeArray
 		e.params, e.params_arr = params_arr, params_arr
@@ -171,21 +158,6 @@ func NewRequestA(method string, params []interface{}, id interface{}) (Request, 
 		id:         id,
 	}
 
-	if err := req.Check(); err != nil {
-		return nil, err
-	} else {
-		return req, nil
-	}
-}
-
-// make a new request
-func NewRequestM(method string, params map[string]interface{}, id interface{}) (Request, error) {
-	var req = &request_object{
-		jsonrpc:    "2.0",
-		method:     method,
-		param_type: RequestParamTypeMap,
-		id:         id,
-	}
 	if err := req.Check(); err != nil {
 		return nil, err
 	} else {

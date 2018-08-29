@@ -68,4 +68,7 @@ var (
 
 	// ErrInvalidRequest
 	ErrParse_Method_ReservedFunc = Error(-32600, "Parse error", "'method' with prefix 'rpc.' is reserved")
+
+	// ErrInvalidParams
+	ErrMethod_ParamsNumNotMatch = Error(-32602, "Invalid params", "num of params is not match")
 )
