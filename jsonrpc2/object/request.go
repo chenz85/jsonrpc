@@ -92,6 +92,10 @@ func (e *request_object) ArrayParams() []interface{} {
 }
 
 func (e *request_object) Parse(obj map[string]interface{}) (err Err) {
+	if obj == nil {
+		return ErrInvalidRequest
+	}
+
 	// jsonrpc
 	if json_rpc, ex := obj["jsonrpc"]; !ex || json_rpc != "2.0" {
 		return ErrParse_MissingField_jsonrpc

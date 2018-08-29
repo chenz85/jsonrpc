@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"reflect"
 
@@ -13,60 +12,63 @@ import (
 // respnose object is nil if err is not nil.
 func HandleRequest(data []byte) (resp_data []byte) {
 	log.Printf("req data: %s\n", string(data))
-	var err object.Err
-	var resp_arr = make([]object.Response, 0, 1)
 	if data[0] == '[' {
 		// batch request
-		var objs = make([]map[string]interface{}, 0, 1)
+		var resp_arr = make([]object.Response, 0, 1)
+		var single_error bool
+		var objs = make([]interface{}, 0, 1)
 		if je := json.Unmarshal(data, &objs); je != nil {
 			log.Println("parse request failed:", je)
-			err = object.ErrParse
+			resp_arr = append(resp_arr, process_error(object.ErrParse))
+			single_error = true
 		} else if len(objs) == 0 {
-			err = object.ErrInvalidRequest
+			resp_arr = append(resp_arr, process_error(object.ErrInvalidRequest))
+			single_error = true
 		} else {
-			for _, obj := range objs {
+			for _, obj_val := range objs {
+				obj, _ := obj_val.(map[string]interface{})
 				if req, pe := object.ParseRequest(obj); pe != nil {
-					err = pe
-					break
+					resp_arr = append(resp_arr, process_error(pe))
 				} else if resp := process_request(req); resp != nil {
 					resp_arr = append(resp_arr, resp)
 				}
 			}
 		}
+
+		if resp_cnt := len(resp_arr); resp_cnt == 0 {
+			// no response
+			resp_data = nil
+		} else if single_error {
+			resp_data = resp_arr[0].JsonObject().ToJson()
+		} else {
+			var obj_arr = make([]object.JsonObject, resp_cnt)
+			for i, resp := range resp_arr {
+				obj_arr[i] = resp.JsonObject()
+			}
+			resp_data = object.JsonObjectArrayToJson(obj_arr)
+		}
 	} else {
 		// single request
+		var resp object.Response
 		var obj = make(map[string]interface{})
 		if je := json.Unmarshal(data, &obj); je != nil {
 			log.Println("parse request failed:", je)
-			err = object.ErrParse
+			resp = process_error(object.ErrParse)
 		} else if req, pe := object.ParseRequest(obj); pe != nil {
-			err = pe
-		} else if resp := process_request(req); resp != nil {
-			resp_arr = append(resp_arr, resp)
-		}
-	}
-
-	if err != nil {
-		// error response
-		if _resp, re := object.NewResponse(nil, err, nil); re != nil {
-			err = object.ErrInternalError
+			resp = process_error(pe)
 		} else {
-			resp_data = _resp.JsonObject().ToJson()
+			resp = process_request(req)
 		}
-	} else if resp_cnt := len(resp_arr); resp_cnt == 0 {
-		// no response
-		resp_data = nil
-	} else if resp_cnt == 1 {
-		// single response
-		resp_data = resp_arr[0].JsonObject().ToJson()
-	} else {
-		// batch response
-		var obj_arr = make([]object.JsonObject, resp_cnt)
-		for i, resp := range resp_arr {
-			obj_arr[i] = resp.JsonObject()
+
+		if resp != nil {
+			resp_data = resp.JsonObject().ToJson()
 		}
-		resp_data = object.JsonObjectArrayToJson(obj_arr)
 	}
+	return
+}
+
+func process_error(err object.Err) (resp object.Response) {
+	resp, _ = object.NewResponse(nil, err, nil)
 	return
 }
 
