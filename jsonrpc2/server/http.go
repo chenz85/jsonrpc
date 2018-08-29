@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/czsilence/jsonrpc/jsonrpc2/object"
 )
 
 func StartHttpServer(host string, port uint16, path string) {
@@ -22,12 +24,9 @@ func StartHttpServer(host string, port uint16, path string) {
 
 func rpc(w http.ResponseWriter, r *http.Request) {
 	if data, err := ioutil.ReadAll(r.Body); err != nil {
-		// TODO: parse error
 		log.Println("parse error:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	} else if resp, err := ProcessRequest(string(data)); err != nil {
-		w.Write([]byte(err.Json()))
+		w.Write([]byte(object.ErrParse.Json()))
 	} else {
-		w.Write([]byte(resp.Json()))
+		w.Write(HandleRequest(data))
 	}
 }

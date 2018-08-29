@@ -34,7 +34,7 @@ func (e *request_object) Json() string {
 	return "{}"
 }
 
-func ParseRequest(obj map[string]interface{}) (Request, error) {
+func ParseRequest(obj map[string]interface{}) (Request, Err) {
 	var req = &request_object{}
 	// TODO: fill request object
 	return req, nil
