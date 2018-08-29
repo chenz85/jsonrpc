@@ -27,8 +27,7 @@ func HandleRequest(data []byte) (resp_data []byte) {
 				if req, pe := object.ParseRequest(obj); pe != nil {
 					err = pe
 					break
-				} else {
-					resp := process_request(req)
+				} else if resp := process_request(req); resp != nil {
 					resp_arr = append(resp_arr, resp)
 				}
 			}
@@ -41,15 +40,16 @@ func HandleRequest(data []byte) (resp_data []byte) {
 			err = object.ErrParse
 		} else if req, pe := object.ParseRequest(obj); pe != nil {
 			err = pe
-		} else {
-			resp := process_request(req)
+		} else if resp := process_request(req); resp != nil {
 			resp_arr = append(resp_arr, resp)
 		}
 	}
 
 	if err != nil {
 		resp_data = err.JsonObject().ToJson()
-	} else if resp_cnt := len(resp_arr); resp_cnt == 1 {
+	} else if resp_cnt := len(resp_arr); resp_cnt == 0 {
+		resp_data = nil
+	} else if resp_cnt == 1 {
 		resp_data = resp_arr[0].JsonObject().ToJson()
 	} else {
 		var obj_arr = make([]object.JsonObject, resp_cnt)
@@ -80,7 +80,7 @@ func process_request(req object.Request) (resp object.Response) {
 	}
 	if _resp, re := object.NewResponse(result, err, req.Id()); re != nil {
 		err = object.ErrInternalError
-	} else {
+	} else if !req.IsNotification() {
 		resp = _resp
 	}
 	return
