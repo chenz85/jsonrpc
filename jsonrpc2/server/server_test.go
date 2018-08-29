@@ -20,9 +20,9 @@ func TestHandleRequest(t *testing.T) {
 		},
 	}
 
-	// server.HandleFunc("subtract", func(a, b int) int {
-	// 	return a - b
-	// })
+	server.HandleFunc("subtract", func(a, b float64) float64 {
+		return a - b
+	})
 
 	for _, value := range values {
 		resp := server.HandleRequest([]byte(value.request))
