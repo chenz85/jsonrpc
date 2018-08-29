@@ -13,7 +13,7 @@ type RPCFunc struct {
 }
 
 var (
-	rpc_mapper map[string]*RPCFunc
+	rpc_mapper map[string]*RPCFunc = make(map[string]*RPCFunc)
 )
 
 func map_rpc_func(name string, reflect_func reflect.Value) (err error) {

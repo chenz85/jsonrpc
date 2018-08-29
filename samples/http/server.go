@@ -1,13 +1,18 @@
-package server_test
+package main
 
 import (
 	"fmt"
-	"testing"
 
+	"github.com/czsilence/go/app"
 	"github.com/czsilence/jsonrpc/jsonrpc2/server"
 )
 
-func TestHttpServer(t *testing.T) {
+func main() {
+	go start()
+	app.HandleInterrupt()
+}
+
+func start() {
 	server.HandleFunc("echo", func(val string) string {
 		return fmt.Sprintf("you say: %s", val)
 	})
