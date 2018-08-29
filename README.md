@@ -24,7 +24,7 @@ https://www.jsonrpc.org/specification
     import 	"github.com/czsilence/jsonrpc/jsonrpc2/server"
 
     // listen on a tcp host
-    svr := server.NewSocketServer("tcp4", ":9003")
+    svr := server.NewSocketServer("tcp4", "127.0.0.1:9003")
     // or linsten on a unix socket. The path to rpc.socket must be exist
 	// svr := server.NewSocketServer("unix", "path/to/rpc.socket")
 	svr.RegisterMethod("echo", func(val string) string {
@@ -35,11 +35,16 @@ https://www.jsonrpc.org/specification
 
 * test
 
+* * http  
     ```bash
-    curl -d '{"jsonrpc": "2.0", "method": "echo", "params": ["42"], "id": 1}' http://127.0.0.1:9002/rpc
+    $ curl -d '{"jsonrpc": "2.0", "method": "echo", "params": ["42"], "id": 1}' http://127.0.0.1:9002/rpc
     ```
-
-    will get response if success:
+* * socket
+    ```bash
+    $ nc 127.0.0.1 9003
+    {"jsonrpc": "2.0", "method": "echo", "params": ["42"], "id": 1}
+    ```
+* * will get response if success:
     ```bash
     {"id":1,"jsonrpc":"2.0","result":"you say: 42"}
     ```
