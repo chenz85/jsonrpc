@@ -25,7 +25,7 @@ func StartHttpServer(host string, port uint16, path string) {
 func rpc(w http.ResponseWriter, r *http.Request) {
 	if data, err := ioutil.ReadAll(r.Body); err != nil {
 		log.Println("parse error:", err)
-		w.Write([]byte(object.ErrParse.Json()))
+		w.Write(object.ErrParse.JsonObject().ToJson())
 	} else {
 		w.Write(HandleRequest(data))
 	}

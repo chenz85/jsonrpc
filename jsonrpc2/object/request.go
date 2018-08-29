@@ -32,7 +32,7 @@ func (t RequestParamType) String() string {
 }
 
 type Request interface {
-	json_interface
+	json_object
 
 	Id() interface{}
 	IsNotification() bool
@@ -69,9 +69,12 @@ type request_object struct {
 	id interface{}
 }
 
-func (e *request_object) Json() string {
-	// TODO: to json
-	return "{}"
+func (req *request_object) JsonObject() JsonObject {
+	obj := JsonObject{}
+
+	// TODO: init json obj
+
+	return obj
 }
 
 func (e *request_object) Id() interface{} {

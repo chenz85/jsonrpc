@@ -51,11 +51,15 @@ func HandleRequest(data []byte) (resp_data []byte) {
 	}
 
 	if err != nil {
-		resp_data = []byte(err.Json())
-	} else if len(resp_arr) == 1 {
-		// TODO: single response
+		resp_data = err.JsonObject().ToJson()
+	} else if resp_cnt := len(resp_arr); resp_cnt == 1 {
+		resp_data = resp_arr[0].JsonObject().ToJson()
 	} else {
-		// TODO: batch response
+		var obj_arr = make([]object.JsonObject, resp_cnt)
+		for i, resp := range resp_arr {
+			obj_arr[i] = resp.JsonObject()
+		}
+		resp_data = object.JsonObjectArrayToJson(obj_arr)
 	}
 	return
 }

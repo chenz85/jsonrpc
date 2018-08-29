@@ -1,7 +1,7 @@
 package object
 
 type Err interface {
-	json_interface
+	json_object
 }
 
 type error_object struct {
@@ -19,9 +19,15 @@ type error_object struct {
 	data interface{}
 }
 
-func (e *error_object) Json() string {
-	// TODO: to json
-	return "{}"
+func (e *error_object) JsonObject() JsonObject {
+	obj := JsonObject{
+		"code":    e.code,
+		"message": e.message,
+	}
+	if e.data != nil {
+		obj["data"] = e.data
+	}
+	return obj
 }
 
 // create a custom error

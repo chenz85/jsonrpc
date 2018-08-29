@@ -3,7 +3,7 @@ package object
 var ()
 
 type Response interface {
-	json_interface
+	json_object
 }
 
 type response_object struct {
@@ -18,7 +18,7 @@ type response_object struct {
 	// This member is REQUIRED on error.
 	// This member MUST NOT exist if there was no error triggered during invocation.
 	// The value for this member MUST be an Object as defined in section 5.1.
-	error string
+	err string
 
 	// This member is REQUIRED.
 	// It MUST be the same as the value of the id member in the Request Object.
@@ -26,9 +26,17 @@ type response_object struct {
 	id interface{}
 }
 
-func (r *response_object) Json() string {
-	// TODO: to json
-	return "{}"
+func (resp *response_object) JsonObject() JsonObject {
+	obj := JsonObject{
+		"jsonrpc": resp.jsonrpc,
+		"id":      resp.id,
+	}
+	if resp.err != "" {
+		obj["error"] = resp.err
+	} else {
+		obj["result"] = resp.result
+	}
+	return obj
 }
 
 func CreateResponse(obj map[string]interface{}) (Response, error) {
