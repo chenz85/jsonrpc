@@ -28,6 +28,15 @@ func (svr *httpServer) _Serve() {
 }
 
 func (svr *httpServer) rpc(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Add("Access-Control-Allow-Methods", http.MethodPost)
+		return
+	}
+
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Content-Type", "application/json")
 	if data, err := ioutil.ReadAll(r.Body); err != nil {
 		log.Println("parse error:", err)
 		w.Write(object.ErrParse.JsonObject().ToJson())
