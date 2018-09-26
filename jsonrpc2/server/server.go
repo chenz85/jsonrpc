@@ -76,6 +76,7 @@ func (bs *BaseServer) process_error(err object.Err) (resp object.Response) {
 }
 
 func (bs *BaseServer) process_request(req object.Request) (resp object.Response) {
+	defer bs.handle_request_panic(&resp)
 	var result interface{}
 	var err object.Err
 	log.Printf("req: %+v\n", req)
@@ -98,6 +99,21 @@ func (bs *BaseServer) process_request(req object.Request) (resp object.Response)
 		resp = _resp
 	}
 	return
+}
+
+func (bs *BaseServer) handle_request_panic(resp *object.Response) {
+	if edata := recover(); edata == nil {
+		// no error
+	} else if err, ok := edata.(object.Err); ok && err != nil {
+		*resp = bs.process_error(err)
+	} else if err, ok := edata.(error); ok && err != nil {
+		*resp = bs.process_error(object.SimpleError(-1, err.Error()))
+	} else if err, ok := edata.(string); ok && err != "" {
+		*resp = bs.process_error(object.SimpleError(-1, err))
+	} else {
+		*resp = bs.process_error(object.SimpleError(-1, "unknown error"))
+		log.Println("unsupported error:", edata)
+	}
 }
 
 func (bs *BaseServer) RegisterMethod(name string, method interface{}) (err error) {
