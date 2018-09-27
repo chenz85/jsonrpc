@@ -39,7 +39,7 @@ func (m *_RPCMethod) InvokeA(params []interface{}) (result interface{}, err obje
 	} else {
 		var param_vals = make([]reflect.Value, len(params))
 		for i, p := range params {
-			if reflect.TypeOf(p) != m.rfpt[i] {
+			if !check_arg_type(reflect.TypeOf(p), m.rfpt[i]) {
 				err = object.ErrMethod_WrongParamsType
 				return
 			}
@@ -49,6 +49,11 @@ func (m *_RPCMethod) InvokeA(params []interface{}) (result interface{}, err obje
 		result = m.return_values(result_vals)
 	}
 	return
+}
+
+// 参数类型判断
+func check_arg_type(arg, param reflect.Type) bool {
+	return arg.AssignableTo(param)
 }
 
 func (m *_RPCMethod) return_values(vals []reflect.Value) (result interface{}) {
