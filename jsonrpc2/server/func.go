@@ -34,7 +34,10 @@ func (m *_RPCMethod) Invoke() (result interface{}, err object.Err) {
 	return
 }
 func (m *_RPCMethod) InvokeA(params []interface{}) (result interface{}, err object.Err) {
-	if m.rft.NumIn() != len(params) {
+	if m.rft.IsVariadic() {
+		// 可变参数
+		return m.invoke_variadic(params)
+	} else if m.rft.NumIn() != len(params) {
 		err = object.ErrMethod_ParamsNumNotMatch
 	} else {
 		var param_vals = make([]reflect.Value, len(params))
@@ -47,6 +50,42 @@ func (m *_RPCMethod) InvokeA(params []interface{}) (result interface{}, err obje
 		}
 		var result_vals = m.rf.Call(param_vals)
 		result = m.return_values(result_vals)
+	}
+	return
+}
+
+func (m *_RPCMethod) invoke_variadic(params []interface{}) (results interface{}, err object.Err) {
+	if param_num, arg_num := m.rft.NumIn(), len(params); param_num-1 > arg_num {
+		err = object.ErrMethod_ParamsNumNotMatch
+	} else {
+		var param_vals = make([]reflect.Value, param_num)
+		// normal argument
+		for i := 0; i < param_num-1; i++ {
+			var arg = params[i]
+			var at = reflect.TypeOf(arg)
+			if !check_arg_type(at, m.rfpt[i]) {
+				err = object.ErrMethod_WrongParamsType
+				return
+			}
+			param_vals[i] = reflect.ValueOf(arg)
+		}
+		// variadic argument
+		var variadic_vals = reflect.MakeSlice(m.rfpt[param_num-1], 0, arg_num-(param_num-1))
+		var variadic_param_type = m.rfpt[param_num-1].Elem()
+		for i := param_num - 1; i < arg_num; i++ {
+			var arg = params[i]
+			var at = reflect.TypeOf(arg)
+			if !check_arg_type(at, variadic_param_type) {
+				err = object.ErrMethod_WrongParamsType
+				return
+			}
+			variadic_vals = reflect.Append(variadic_vals, reflect.ValueOf(arg))
+		}
+		param_vals[param_num-1] = variadic_vals
+
+		// call
+		var result_vals = m.rf.CallSlice(param_vals)
+		results = m.return_values(result_vals)
 	}
 	return
 }
