@@ -25,7 +25,7 @@ type _RPCMethod struct {
 }
 
 func (m *_RPCMethod) Invoke() (result interface{}, err object.Err) {
-	if m.rft.NumIn() != 0 {
+	if m.rft.NumIn() != 0 && (m.rft.IsVariadic() && m.rft.NumIn() != 1) {
 		err = object.ErrMethod_ParamsNumNotMatch
 	} else {
 		var result_vals = m.rf.Call(nil)
